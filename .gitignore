@@ -4,3 +4,8 @@ __pycache__/
 .env
 .venv/
 
+
+static/disaster_proofs/*.png
+static/disaster_proofs/*.jpg
+static/disaster_proofs/*.jpeg
+static/disaster_proofs/*.webp

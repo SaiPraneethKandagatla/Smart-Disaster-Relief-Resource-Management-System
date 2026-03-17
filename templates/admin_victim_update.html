@@ -1,0 +1,160 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Update Victim{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-user-edit"></i> Update Victim: {{ victim.name }}</h2>
+    <div class="hint">Update health condition or transfer victim to another camp.</div>
+  </section>
+
+  <section class="panel">
+    <h2><i class="fas fa-heartbeat"></i> Victim Details</h2>
+    <div class="details-grid">
+      <div class="detail-item">
+        <span class="label">Victim ID:</span>
+        <span class="value">{{ victim.victim_id }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Name:</span>
+        <span class="value">{{ victim.name }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Age:</span>
+        <span class="value">{{ victim.age }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Address:</span>
+        <span class="value">{{ victim.address or '-' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Current Camp:</span>
+        <span class="value">{{ victim.assigned_camp or 'Not assigned' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Injury:</span>
+        <span class="value">{{ victim.injury or '-' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Current Health:</span>
+        <span class="value">
+          {% if victim.health_condition == 'critical' %}
+            <span class="pill critical">Critical</span>
+          {% else %}
+            <span class="pill">Normal</span>
+          {% endif %}
+        </span>
+      </div>
+      <div class="detail-item">
+        <span class="label">Doctor:</span>
+        <span class="value">{{ victim.doctor_name or 'Not assigned' }} {% if victim.doctor_specialty %}<span class="pill">{{ victim.doctor_specialty }}</span>{% endif %}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2><i class="fas fa-notes-medical"></i> Update Health Condition</h2>
+    <div class="hint">Change the victim's health condition. Marking as critical will auto-allocate a doctor if available.</div>
+
+    <form method="post" action="{{ url_for('update_victim_health', victim_id=victim.victim_id) }}" style="margin-top:15px;">
+      <div class="form-group">
+        <label for="health_condition">Health Condition</label>
+        <select id="health_condition" name="health_condition" required>
+          <option value="normal" {% if victim.health_condition == 'normal' %}selected{% endif %}>Normal</option>
+          <option value="critical" {% if victim.health_condition == 'critical' %}selected{% endif %}>Critical</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit"><i class="fas fa-save"></i> Update Health</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2><i class="fas fa-exchange-alt"></i> Transfer Victim</h2>
+    <div class="hint">Transfer this victim to a different relief camp.</div>
+
+    <form method="post" action="{{ url_for('transfer_victim', victim_id=victim.victim_id) }}" style="margin-top:15px;">
+      <div class="form-group">
+        <label for="target_camp_id">Target Camp</label>
+        <select id="target_camp_id" name="target_camp_id" required>
+          <option value="">-- Select Camp --</option>
+          {% for c in camps %}
+            {% if c.camp_id != victim.assigned_camp %}
+              <option value="{{ c.camp_id }}" {% if c.current_occupancy >= c.max_capacity %}disabled{% endif %}>
+                {{ c.camp_id }} ({{ c.location }}) - 
+                {% if c.current_occupancy >= c.max_capacity %}
+                  FULL
+                {% else %}
+                  {{ c.max_capacity - c.current_occupancy }} spots available
+                {% endif %}
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit"><i class="fas fa-arrow-right"></i> Transfer Victim</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="actions" style="margin-top:20px;">
+    <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-arrow-left"></i> Back to Admin</button></a>
+  </div>
+
+  <style>
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+      margin-top: 15px;
+    }
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-left: 3px solid #0ea5e9;
+    }
+    .detail-item .label {
+      font-weight: 600;
+      color: #64748b;
+      min-width: 100px;
+    }
+    .detail-item .value {
+      color: #1e293b;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-group select {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group select:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+    }
+    .pill.critical {
+      background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    }
+  </style>
+{% endblock %}

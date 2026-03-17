@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Live Disaster Status{% endblock %}
+{% block content %}
+
+{% if alert %}
+<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:16px;padding:20px;display:flex;align-items:flex-start;gap:14px;animation:fadeIn 0.4s ease;">
+  <i class="fas fa-bullhorn" style="color:#d97706;font-size:22px;margin-top:2px;"></i>
+  <div>
+    <strong style="font-size:15px;color:#92400e;display:block;margin-bottom:4px;">Official Alert from Disaster Control</strong>
+    <span style="color:#78350f;font-size:14px;">{{ alert.message }}</span>
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <h2><i class="fas fa-satellite-dish"></i> Live Disaster Status</h2>
+  <p class="hint">Real-time situational overview. Updates automatically when admin changes the status.</p>
+
+  {% if active_disasters %}
+  {% for d in active_disasters %}
+  <div style="border:2px solid #e5e7eb;border-radius:16px;padding:20px;margin-bottom:16px;{% if d.severity == 'critical' %}border-color:#ef4444;background:#fff5f5;{% elif d.severity == 'high' %}border-color:#f59e0b;background:#fffbf0;{% else %}background:#f8fafc;{% endif %}">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="font-size:24px;">
+        {% if d.disaster_type == 'natural' %}🌊{% else %}⚠️{% endif %}
+      </div>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#1a1a2e;">{{ d.disaster_subtype | title }}</div>
+        <div style="font-size:13px;color:#6b7280;"><i class="fas fa-map-marker-alt"></i> {{ d.location }}</div>
+      </div>
+      <div style="margin-left:auto;">
+        {% if d.status == 'active' %}
+        <span style="background:#ef4444;color:#fff;padding:6px 16px;border-radius:50px;font-size:12px;font-weight:700;animation:pulse 2s infinite;display:inline-block;">● ACTIVE</span>
+        {% elif d.status == 'monitoring' %}
+        <span style="background:#f59e0b;color:#fff;padding:6px 16px;border-radius:50px;font-size:12px;font-weight:700;">● MONITORING</span>
+        {% else %}
+        <span style="background:#6b7280;color:#fff;padding:6px 16px;border-radius:50px;font-size:12px;font-weight:700;">{{ d.status | upper }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+      <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
+        <div style="font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Severity</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px;color:{% if d.severity=='critical' %}#ef4444{% elif d.severity=='high' %}#f59e0b{% else %}#10b981{% endif %};">{{ d.severity | title }}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
+        <div style="font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Teams Deployed</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px;color:#0ea5e9;">{{ d.assigned_responders | length }}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
+        <div style="font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Estimated Affected</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px;color:#8b5cf6;">{{ d.estimated_victims or '—' }}</div>
+      </div>
+      <div style="background:#fff;border-radius:12px;padding:14px;text-align:center;border:1px solid #e5e7eb;">
+        <div style="font-size:11px;color:#6b7280;font-weight:600;text-transform:uppercase;">Relief Camps</div>
+        <div style="font-size:20px;font-weight:800;margin-top:6px;color:#10b981;">{{ d.assigned_camps | length }}</div>
+      </div>
+    </div>
+
+    {% if d.updates %}
+    <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #e5e7eb;">
+      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:10px;"><i class="fas fa-clock"></i> Latest Updates</div>
+      {% for upd in d.updates[-3:] | reverse %}
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#0ea5e9;margin-top:5px;flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:13px;color:#1a1a2e;">{{ upd.message }}</div>
+          <div style="font-size:11px;color:#9ca3af;">{{ upd.timestamp[:16].replace('T',' ') if upd.timestamp else '' }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div style="text-align:center;padding:48px 0;color:#6b7280;">
+    <i class="fas fa-shield-halved" style="font-size:56px;margin-bottom:16px;display:block;opacity:0.3;color:#10b981;"></i>
+    <h3 style="font-size:20px;font-weight:700;color:#1a1a2e;margin:0 0 8px;">No Active Disasters</h3>
+    <p>All clear. No active emergency situations reported at this time.</p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-campground"></i> Relief Camp Availability</h2>
+  {% if available_camps %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Camp ID</th>
+          <th>Location</th>
+          <th>Occupancy</th>
+          <th>Food Packets</th>
+          <th>Medical Kits</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in available_camps %}
+        {% set pct = ((c.current_occupancy / c.max_capacity) * 100) | round(0) | int if c.max_capacity > 0 else 0 %}
+        <tr>
+          <td><strong>{{ c.camp_id }}</strong></td>
+          <td>{{ c.location }}</td>
+          <td>
+            {{ c.current_occupancy }}/{{ c.max_capacity }}
+            <div style="background:#f3f4f6;border-radius:50px;height:6px;margin-top:6px;overflow:hidden;">
+              <div style="background:{% if pct>=90 %}#ef4444{% elif pct>=70 %}#f59e0b{% else %}#10b981{% endif %};width:{{ pct }}%;height:100%;border-radius:50px;transition:width 0.3s;"></div>
+            </div>
+            <small style="color:#9ca3af;">{{ pct }}% full</small>
+          </td>
+          <td>{{ c.available_food_packets }}</td>
+          <td>{{ c.available_medical_kits }}</td>
+          <td>
+            {% if pct >= 100 %}
+            <span class="pill critical">Full</span>
+            {% elif pct >= 90 %}
+            <span class="pill pending">Nearly Full</span>
+            {% else %}
+            <span class="pill open">Available</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="hint">No active relief camps at the moment.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-person-circle-question"></i> Report a Missing Person</h2>
+  <p class="hint">If someone you know is missing due to an active disaster, you can report them here.</p>
+  <div class="actions" style="margin-top:12px;">
+    <a href="{{ url_for('missing_report_page') }}" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;">
+      <i class="fas fa-plus"></i> Report Missing Person
+    </a>
+    <a href="{{ url_for('missing_search_page') }}" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:#fff;color:#1a1a2e;border:2px solid #e5e7eb;border-radius:12px;text-decoration:none;font-weight:700;">
+      <i class="fas fa-magnifying-glass"></i> Search Missing Persons
+    </a>
+  </div>
+</div>
+{% endblock %}

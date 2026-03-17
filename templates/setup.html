@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Setup{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Disaster Setup</h2>
+    <div class="hint">First choose whether the disaster is natural or man-made. The system will show which forces should come into action.</div>
+
+    {% if locked %}
+      <div class="actions" style="margin-top:10px;">
+        <span class="pill">Disaster type: {{ disaster_type }}</span>
+        {% if disaster_subtype %}
+          <span class="pill">Disaster: {{ disaster_subtype }}</span>
+        {% endif %}
+        <span class="hint">Setup is locked (cannot be changed).</span>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+    {% else %}
+
+    <form method="post" action="{{ url_for('setup_save') }}" enctype="multipart/form-data" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="disaster_type">Disaster caused by</label>
+          <select id="disaster_type" name="disaster_type" required>
+            <option value="" {% if not disaster_type %}selected{% endif %}>Select…</option>
+            <option value="natural" {% if disaster_type == 'natural' %}selected{% endif %}>Natural disaster</option>
+            <option value="man_made" {% if disaster_type == 'man_made' %}selected{% endif %}>Man-made disaster</option>
+          </select>
+          <div class="hint">Natural: earthquake/flood/cyclone. Man-made: fires/accidents/industrial chemical spills.</div>
+        </div>
+
+        <div>
+          <label for="disaster_subtype">Specific disaster (choose from list)</label>
+          <select id="disaster_subtype" name="disaster_subtype">
+            <option value="" {% if not disaster_subtype %}selected{% endif %}>Select…</option>
+          </select>
+          <div class="hint">Example: Flood/Tsunami automatically activates divers; ambulance is always dispatched.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <label for="proof_image">Proof Photo (required)</label>
+        <input
+          id="proof_image"
+          name="proof_image"
+          type="file"
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          required
+        />
+        <div class="hint">Upload a clear site photo so Admin can verify and approve/reject this disaster report.</div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Save Setup</button>
+        <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+    </form>
+
+    {% endif %}
+  </section>
+
+  <script>
+    // Populate subtype list based on selected disaster type.
+    const manMade = {{ man_made_disasters|tojson }};
+    const natural = {{ natural_disasters|tojson }};
+    const currentSubtype = {{ (disaster_subtype or '')|tojson }};
+
+    const typeEl = document.getElementById('disaster_type');
+    const subtypeEl = document.getElementById('disaster_subtype');
+
+    function setSubtypeOptions() {
+      const dtype = (typeEl.value || '').toLowerCase();
+      const list = dtype === 'man_made' ? manMade : (dtype === 'natural' ? natural : []);
+
+      // Rebuild options.
+      subtypeEl.innerHTML = '';
+      const first = document.createElement('option');
+      first.value = '';
+      first.textContent = 'Select…';
+      subtypeEl.appendChild(first);
+
+      for (const item of list) {
+        const opt = document.createElement('option');
+        opt.value = item.code;
+        opt.textContent = item.label;
+        subtypeEl.appendChild(opt);
+      }
+
+      // Restore selection only if it exists in current list.
+      if (currentSubtype && list.some(x => x.code === currentSubtype)) {
+        subtypeEl.value = currentSubtype;
+      }
+    }
+
+    typeEl.addEventListener('change', setSubtypeOptions);
+    setSubtypeOptions();
+  </script>
+{% endblock %}

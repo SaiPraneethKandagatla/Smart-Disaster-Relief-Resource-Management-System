@@ -1,0 +1,40 @@
+{% extends "admin_base.html" %}
+{% block title %}Broadcast Alert{% endblock %}
+{% block content %}
+<div class="panel">
+  <h2><i class="fas fa-bullhorn"></i> Broadcast Alert</h2>
+  <p class="hint">Set a public alert message that will be displayed prominently on the HelpDesk dashboard for all users.</p>
+
+  {% if alert %}
+  <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:14px;padding:20px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:20px;"></i>
+      <strong style="font-size:16px;color:#92400e;">Active Alert</strong>
+    </div>
+    <p style="margin:0 0 10px;color:#78350f;font-size:15px;">{{ alert.message }}</p>
+    <small style="color:#92400e;">Set by {{ alert.set_by or 'Admin' }} on {{ alert.set_at[:19].replace('T',' ') if alert.set_at else 'Unknown time' }}</small>
+    <form method="post" action="{{ url_for('broadcast_clear') }}" style="margin-top:14px;">
+      <button class="danger" type="submit"><i class="fas fa-times"></i> Clear Alert</button>
+    </form>
+  </div>
+  {% else %}
+  <div style="background:#f0fdf4;border:2px solid #10b981;border-radius:14px;padding:16px;margin-bottom:24px;">
+    <i class="fas fa-check-circle" style="color:#10b981;margin-right:8px;"></i>
+    <strong style="color:#065f46;">No active alert</strong> — Users see a normal dashboard.
+  </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('broadcast_save') }}">
+    <div style="margin-bottom:16px;">
+      <label for="message"><i class="fas fa-pen"></i> Alert Message</label>
+      <textarea id="message" name="message" rows="4" placeholder="e.g. Cyclone warning: Avoid coastal areas. All camps at max capacity. Emergency teams deployed." required>{{ alert.message if alert else '' }}</textarea>
+    </div>
+    <div class="actions">
+      <button type="submit"><i class="fas fa-broadcast-tower"></i> {{ 'Update Alert' if alert else 'Publish Alert' }}</button>
+      <a href="{{ url_for('admin_portal') }}" class="button secondary" style="padding:14px 24px;border-radius:12px;background:#fff;border:2px solid #e5e7eb;font-weight:700;text-decoration:none;color:#1a1a2e;">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Register Victim{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Register Victim (Auto Assign Camp)</h2>
+    <form method="post" action="/victims/register">
+      <div class="row">
+        <div>
+          <label>Victim ID</label>
+          <input name="victim_id" placeholder="V001" required />
+        </div>
+        <div>
+          <label>Name</label>
+          <input name="name" placeholder="Full Name" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Age</label>
+          <input type="number" name="age" min="0" value="0" required />
+        </div>
+        <div>
+          <label>Health Condition</label>
+          <select name="health_condition">
+            <option value="normal">normal</option>
+            <option value="critical">critical</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Address</label>
+          <textarea name="address" placeholder="House/Street, Area, City" required></textarea>
+        </div>
+        <div>
+          <label>Injury / Issue (for doctor allocation if critical)</label>
+          <textarea name="injury" placeholder="Example: fracture in left arm, burn injury, breathing problem"></textarea>
+          <div class="hint">If condition is critical, a doctor will be allocated based on this injury description.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Register Victim</button>
+        <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+
+      <div class="hint">If all camps are full, the system will show a message and not assign a camp.</div>
+    </form>
+  </section>
+{% endblock %}

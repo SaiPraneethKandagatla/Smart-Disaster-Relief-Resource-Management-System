@@ -1,0 +1,172 @@
+{% extends "admin_base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="panel">
+  <h2><i class="fas fa-chart-bar"></i> Analytics Dashboard</h2>
+  <p class="hint">Visual overview of camp occupancy, victim health distribution, and responder availability.</p>
+
+  <div class="stat-grid" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div class="label"><i class="fas fa-campground"></i> Total Camps</div>
+      <div class="value">{{ total_camps }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label"><i class="fas fa-users"></i> Total Victims</div>
+      <div class="value">{{ total_victims }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label"><i class="fas fa-hard-hat"></i> Total Responders</div>
+      <div class="value">{{ total_responders }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label"><i class="fas fa-user-check"></i> Free Responders</div>
+      <div class="value" style="color:#10b981;">{{ responder_status.get('free', 0) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-chart-column"></i> Camp Occupancy vs Capacity</h2>
+  {% if camp_labels %}
+  <canvas id="campChart" height="100"></canvas>
+  {% else %}
+  <p class="hint">No camps registered yet.</p>
+  {% endif %}
+</div>
+
+<div class="row" style="grid-template-columns:1fr 1fr;gap:16px;">
+  <div class="panel">
+    <h2><i class="fas fa-heart-pulse"></i> Victim Health Status</h2>
+    {% if health_counts %}
+    <canvas id="healthChart" height="200"></canvas>
+    {% else %}
+    <p class="hint">No victims registered yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2><i class="fas fa-users-gear"></i> Responder Availability</h2>
+    {% if responder_status %}
+    <canvas id="responderChart" height="200"></canvas>
+    {% else %}
+    <p class="hint">No responders registered yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-sitemap"></i> Responders by Role</h2>
+  {% if role_counts %}
+  <canvas id="roleChart" height="80"></canvas>
+  {% else %}
+  <p class="hint">No responders registered yet.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-download"></i> Export Data</h2>
+  <p class="hint">Download current data as CSV spreadsheets.</p>
+  <div class="actions">
+    <a href="{{ url_for('export_camps_csv') }}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:linear-gradient(135deg,#0ea5e9,#06b6d4);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;">
+      <i class="fas fa-campground"></i> Export Camps CSV
+    </a>
+    <a href="{{ url_for('export_victims_csv') }}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;">
+      <i class="fas fa-users"></i> Export Victims CSV
+    </a>
+    <a href="{{ url_for('export_responders_csv') }}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;">
+      <i class="fas fa-hard-hat"></i> Export Responders CSV
+    </a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  {% if camp_labels %}
+  new Chart(document.getElementById('campChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ camp_labels | tojson }},
+      datasets: [
+        {
+          label: 'Current Occupancy',
+          data: {{ camp_occupancy | tojson }},
+          backgroundColor: 'rgba(14,165,233,0.7)',
+          borderColor: '#0ea5e9',
+          borderWidth: 2,
+          borderRadius: 8,
+        },
+        {
+          label: 'Max Capacity',
+          data: {{ camp_capacity | tojson }},
+          backgroundColor: 'rgba(107,114,128,0.2)',
+          borderColor: '#6b7280',
+          borderWidth: 2,
+          borderRadius: 8,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+  {% endif %}
+
+  {% if health_counts %}
+  const healthLabels = {{ health_counts.keys() | list | tojson }};
+  const healthData   = {{ health_counts.values() | list | tojson }};
+  const healthColors = ['#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#6b7280'];
+  new Chart(document.getElementById('healthChart'), {
+    type: 'doughnut',
+    data: {
+      labels: healthLabels,
+      datasets: [{ data: healthData, backgroundColor: healthColors, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+  {% endif %}
+
+  {% if responder_status %}
+  const rStatusLabels = {{ responder_status.keys() | list | tojson }};
+  const rStatusData   = {{ responder_status.values() | list | tojson }};
+  const rColors = ['#10b981','#ef4444','#f59e0b','#6b7280'];
+  new Chart(document.getElementById('responderChart'), {
+    type: 'pie',
+    data: {
+      labels: rStatusLabels,
+      datasets: [{ data: rStatusData, backgroundColor: rColors, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+  {% endif %}
+
+  {% if role_counts %}
+  new Chart(document.getElementById('roleChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ role_counts.keys() | list | tojson }},
+      datasets: [{
+        label: 'Responders',
+        data: {{ role_counts.values() | list | tojson }},
+        backgroundColor: ['#ef4444','#f59e0b','#10b981','#0ea5e9','#8b5cf6'],
+        borderRadius: 8,
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}

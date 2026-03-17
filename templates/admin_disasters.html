@@ -1,0 +1,259 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Disaster Tracking{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-exclamation-triangle"></i> Disaster Tracking Center</h2>
+    <div class="hint">Monitor and manage all disaster incidents. Track response progress and responder assignments.</div>
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-arrow-left"></i> Back to Admin</button></a>
+    </div>
+  </section>
+
+  {% if active_disasters %}
+  <section class="panel" style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #ef4444;">
+    <h2 style="color: #991b1b;"><i class="fas fa-fire"></i> Active Disasters ({{ active_disasters | length }})</h2>
+    <div class="disaster-grid">
+      {% for d in active_disasters %}
+        <div class="disaster-card {% if d.severity == 'critical' %}severity-critical{% elif d.severity == 'high' %}severity-high{% endif %}">
+          <div class="disaster-header">
+            <div class="disaster-type">
+              {% if d.disaster_type == 'flood' %}
+                <i class="fas fa-water"></i>
+              {% elif d.disaster_type == 'earthquake' %}
+                <i class="fas fa-house-damage"></i>
+              {% elif d.disaster_type == 'fire' %}
+                <i class="fas fa-fire-alt"></i>
+              {% elif d.disaster_type == 'cyclone' %}
+                <i class="fas fa-wind"></i>
+              {% else %}
+                <i class="fas fa-exclamation-triangle"></i>
+              {% endif %}
+              <span>{{ d.disaster_type | title }}</span>
+            </div>
+            <span class="status-badge status-{{ d.status }}">{{ d.status | title }}</span>
+          </div>
+          
+          <div class="disaster-body">
+            <h3>{{ d.disaster_id }}</h3>
+            {% if d.disaster_subtype %}
+              <span class="subtype-badge">{{ d.disaster_subtype }}</span>
+            {% endif %}
+            <span class="severity-badge severity-{{ d.severity }}">{{ d.severity | upper }}</span>
+            
+            <div class="disaster-info">
+              <div class="info-row">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>{{ d.location }}</span>
+              </div>
+              {% if d.affected_area %}
+              <div class="info-row">
+                <i class="fas fa-expand-arrows-alt"></i>
+                <span>{{ d.affected_area }}</span>
+              </div>
+              {% endif %}
+              <div class="info-row">
+                <i class="fas fa-users"></i>
+                <span>{{ d.assigned_responders | length }} responders assigned</span>
+              </div>
+              <div class="info-row">
+                <i class="fas fa-clock"></i>
+                <span>Reported: {{ d.reported_at[:16] if d.reported_at else 'N/A' }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="disaster-footer">
+            <a href="{{ url_for('disaster_detail_page', disaster_id=d.disaster_id) }}" style="flex:1;text-decoration:none;">
+              <button type="button" style="width:100%;"><i class="fas fa-eye"></i> View Details</button>
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <section class="panel">
+    <div class="empty-state">
+      <i class="fas fa-check-circle" style="color:#10b981;"></i>
+      <h3>No Active Disasters</h3>
+      <p>All disaster incidents have been resolved.</p>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if resolved_disasters %}
+  <section class="panel">
+    <h2><i class="fas fa-history"></i> Past Disasters ({{ resolved_disasters | length }})</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Reported</th>
+            <th>Resolved</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in resolved_disasters %}
+            <tr>
+              <td>{{ d.disaster_id }}</td>
+              <td>
+                {% if d.disaster_subtype %}
+                  {{ d.disaster_subtype }}
+                {% else %}
+                  {{ d.disaster_type | title }}
+                {% endif %}
+              </td>
+              <td>{{ d.location }}</td>
+              <td><span class="severity-badge severity-{{ d.severity }}">{{ d.severity }}</span></td>
+              <td><span class="status-badge status-{{ d.status }}">{{ d.status }}</span></td>
+              <td>{{ d.reported_at[:10] if d.reported_at else 'N/A' }}</td>
+              <td>{{ d.resolved_at[:10] if d.resolved_at else 'N/A' }}</td>
+              <td>
+                <a href="{{ url_for('disaster_detail_page', disaster_id=d.disaster_id) }}" style="text-decoration:none;">
+                  <button class="secondary" style="padding:5px 10px;font-size:12px;"><i class="fas fa-eye"></i></button>
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <style>
+    .disaster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .disaster-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      border-left: 5px solid #f59e0b;
+    }
+    
+    .severity-critical { border-left-color: #dc2626; }
+    .severity-high { border-left-color: #f97316; }
+    
+    .disaster-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      border-bottom: 1px solid #fecaca;
+    }
+    
+    .disaster-type {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #991b1b;
+    }
+    
+    .disaster-type i {
+      font-size: 20px;
+    }
+    
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .status-ongoing { background: #fef3c7; color: #92400e; }
+    .status-contained { background: #dbeafe; color: #1e40af; }
+    .status-resolved { background: #d1fae5; color: #065f46; }
+    .status-closed { background: #e5e7eb; color: #374151; }
+    .status-reported { background: #fee2e2; color: #991b1b; }
+    
+    .disaster-body {
+      padding: 16px;
+    }
+    
+    .disaster-body h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: #1e293b;
+    }
+    
+    .subtype-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+    
+    .severity-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    
+    .severity-low { background: #d1fae5; color: #065f46; }
+    .severity-medium { background: #fef3c7; color: #92400e; }
+    .severity-high { background: #fed7aa; color: #c2410c; }
+    .severity-critical { background: #fecaca; color: #991b1b; }
+    
+    .disaster-info {
+      margin-top: 12px;
+    }
+    
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: #64748b;
+      font-size: 13px;
+    }
+    
+    .info-row i {
+      width: 16px;
+      color: #94a3b8;
+    }
+    
+    .disaster-footer {
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+      margin: 0 0 8px 0;
+      color: #334155;
+    }
+  </style>
+{% endblock %}

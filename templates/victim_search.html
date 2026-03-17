@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Search Victim{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-search"></i> Find Your Family / Friends</h2>
+    <div class="hint">Search for registered victims by name or ID to check their status and location.</div>
+
+    <form method="get" action="{{ url_for('victim_search_page') }}" style="margin-top:16px;">
+      <div class="row">
+        <div style="flex:2;">
+          <label>Search by Name or Victim ID</label>
+          <input name="q" placeholder="Enter name or ID (e.g., John or V001)" value="{{ query }}" autofocus />
+        </div>
+        <div class="actions" style="align-self:end;">
+          <button type="submit"><i class="fas fa-search"></i> Search</button>
+          <a href="{{ url_for('victim_search_page') }}" style="text-decoration:none;"><button class="secondary" type="button">Clear</button></a>
+          <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+        </div>
+      </div>
+    </form>
+
+    {% if query %}
+      <div style="margin-top:20px;">
+        {% if results %}
+          <div class="hint"><strong>{{ results|length }}</strong> victim(s) found for "{{ query }}":</div>
+          <div style="margin-top:12px; display:grid; gap:12px;">
+            {% for v in results %}
+              <div class="panel" style="border-left:4px solid {% if v.health_condition == 'critical' %}#ef4444{% else %}#10b981{% endif %};">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div>
+                    <strong style="font-size:16px;">{{ v.name }}</strong>
+                    <span class="pill" style="margin-left:8px;">{{ v.victim_id }}</span>
+                  </div>
+                  <div>
+                    {% if v.health_condition == 'critical' %}
+                      <span class="pill critical">CRITICAL</span>
+                    {% else %}
+                      <span class="pill" style="background:#d1fae5; color:#065f46;">Normal / Recovered</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div style="margin-top:12px; display:grid; gap:6px; font-size:14px;">
+                  <div><i class="fas fa-birthday-cake" style="width:20px; color:#6b7280;"></i> <strong>Age:</strong> {{ v.age or 'Unknown' }}</div>
+                  <div><i class="fas fa-campground" style="width:20px; color:#6b7280;"></i> <strong>Camp:</strong> {{ v.assigned_camp or 'Not yet assigned' }}</div>
+                  <div><i class="fas fa-map-marker-alt" style="width:20px; color:#6b7280;"></i> <strong>Address:</strong> {{ v.address or 'Not provided' }}</div>
+                  <div><i class="fas fa-band-aid" style="width:20px; color:#6b7280;"></i> <strong>Injury:</strong> {{ v.injury or 'None reported' }}</div>
+                  {% if v.doctor_name %}
+                    <div><i class="fas fa-user-md" style="width:20px; color:#6b7280;"></i> <strong>Doctor:</strong> {{ v.doctor_name }} ({{ v.doctor_specialty }})</div>
+                  {% endif %}
+                  <div><i class="fas fa-utensils" style="width:20px; color:#6b7280;"></i> <strong>Food:</strong> {{ 'Received' if v.food_received else 'Not yet' }} | <strong>Medical:</strong> {{ 'Received' if v.medical_received else 'Not yet' }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="panel" style="text-align:center; padding:30px;">
+            <i class="fas fa-user-slash" style="font-size:40px; color:#9ca3af; margin-bottom:12px;"></i>
+            <div style="font-size:16px; font-weight:600;">No Victims Found</div>
+            <div class="hint">No registered victim matches "{{ query }}".</div>
+            <div class="hint" style="margin-top:8px;">They may not be registered yet, or try a different spelling.</div>
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="panel" style="text-align:center; padding:30px; margin-top:20px;">
+        <i class="fas fa-users" style="font-size:40px; color:#9ca3af; margin-bottom:12px;"></i>
+        <div style="font-size:16px; font-weight:600;">Search for Victims</div>
+        <div class="hint">Enter a name or victim ID above to find your family members or friends.</div>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Add Volunteer{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-user-plus"></i> Add New Volunteer</h2>
+    <div class="hint">Register a new volunteer in the disaster relief system.</div>
+
+    <form method="post" action="{{ url_for('add_volunteer_submit') }}" style="margin-top:20px;">
+      <div class="form-group">
+        <label for="volunteer_id">Volunteer ID <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="volunteer_id" name="volunteer_id" required placeholder="e.g., VOL001" />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Name <span style="color:#ef4444;">*</span></label>
+        <input type="text" id="name" name="name" required placeholder="Full Name" />
+      </div>
+
+      <div class="form-group">
+        <label for="assigned_camp">Assigned Camp (Optional)</label>
+        <select id="assigned_camp" name="assigned_camp">
+          <option value="">-- Not Assigned --</option>
+          {% for c in camps %}
+            <option value="{{ c.camp_id }}">{{ c.camp_id }} ({{ c.location }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="task">Task (Optional)</label>
+        <input type="text" id="task" name="task" placeholder="e.g., Food distribution, Medical assistance" />
+      </div>
+
+      <div class="actions" style="margin-top:20px;">
+        <button type="submit"><i class="fas fa-plus"></i> Add Volunteer</button>
+        <a href="{{ url_for('volunteers_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-arrow-left"></i> Cancel</button></a>
+      </div>
+    </form>
+  </section>
+
+  <style>
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 3px rgba(14,165,233,0.15);
+    }
+    .form-group input::placeholder {
+      color: #9ca3af;
+    }
+  </style>
+{% endblock %}

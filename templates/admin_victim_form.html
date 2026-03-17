@@ -1,0 +1,53 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Register Victim{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Register Victim</h2>
+    <div class="hint">Register a new victim directly. Camp assignment happens automatically. Doctor is auto-allocated based on injury type.</div>
+
+    <form method="post" action="{{ url_for('register_victim_submit') }}" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="victim_id">Victim ID</label>
+          <input id="victim_id" name="victim_id" placeholder="Example: V-001" required />
+        </div>
+        <div>
+          <label for="name">Full Name</label>
+          <input id="name" name="name" placeholder="Example: John Doe" required />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="age">Age</label>
+          <input id="age" name="age" type="number" min="0" value="30" required />
+        </div>
+        <div>
+          <label for="health_condition">Health Condition</label>
+          <select id="health_condition" name="health_condition" required>
+            <option value="normal" selected>Normal</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="address">Address</label>
+          <input id="address" name="address" placeholder="Example: 123 Main St, City" required />
+        </div>
+        <div>
+          <label for="injury">Injury Description (for doctor allocation)</label>
+          <input id="injury" name="injury" placeholder="e.g., fracture, burns, head injury, chest pain" required />
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Register Victim</button>
+        <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Cancel</button></a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+      border-radius: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(14,165,233,0.3);
+      margin-bottom: 16px;
+    }
+    .logo-icon i {
+      font-size: 32px;
+      color: #fff;
+    }
+    .logo h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a1a2e;
+    }
+    .logo p {
+      margin: 8px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .flash {
+      margin-bottom: 20px;
+    }
+    .msg {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .msg i { font-size: 16px; }
+    .msg.ok { border-left: 4px solid #10b981; }
+    .msg.ok i { color: #10b981; }
+    .msg.err { border-left: 4px solid #ef4444; }
+    .msg.err i { color: #ef4444; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #6b7280;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid #e5e7eb;
+      background: #fff;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 16px;
+    }
+    input:focus {
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(14,165,233,0.4);
+    }
+
+    .hint {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    .hint a {
+      color: #0ea5e9;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .hint a:hover {
+      text-decoration: underline;
+    }
+
+    .credentials-hint {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .credentials-hint strong {
+      color: #1a1a2e;
+    }
+    .credentials-hint .muted {
+      color: #6b7280;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <div class="logo-icon">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h1>Admin Portal</h1>
+      <p>Login to manage disaster relief operations</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash">
+        {% for category, message in messages %}
+          <div class="msg {{ category }}">
+            <i class="fas {% if category == 'ok' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('login_submit') }}">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Enter username" required autofocus />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter password" required />
+
+      <button type="submit">
+        <i class="fas fa-sign-in-alt"></i> Login
+      </button>
+    </form>
+
+    <div class="hint">
+      <a href="http://localhost:5000">Go to HelpDesk (Public Portal)</a>
+    </div>
+
+    <div class="credentials-hint">
+      <div class="muted">Default credentials</div>
+      <div><strong>Username:</strong> admin</div>
+      <div><strong>Password:</strong> admin123</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Add Camp{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Add Relief Camp</h2>
+    <div class="hint">Add a new relief camp directly. This is applied immediately without approval.</div>
+
+    <form method="post" action="{{ url_for('add_camp_submit') }}" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="camp_id">Camp ID</label>
+          <input id="camp_id" name="camp_id" placeholder="Example: CAMP-001" required />
+        </div>
+        <div>
+          <label for="location">Location</label>
+          <input id="location" name="location" placeholder="Example: City Hall, Main Street" required />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="max_capacity">Max Capacity</label>
+          <input id="max_capacity" name="max_capacity" type="number" min="1" value="50" required />
+        </div>
+        <div>
+          <label for="available_food_packets">Available Food Packets</label>
+          <input id="available_food_packets" name="available_food_packets" type="number" min="0" value="0" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="available_medical_kits">Available Medical Kits</label>
+          <input id="available_medical_kits" name="available_medical_kits" type="number" min="0" value="0" />
+        </div>
+        <div>
+          <label for="volunteers">Volunteers (comma-separated)</label>
+          <input id="volunteers" name="volunteers" placeholder="Example: John, Jane" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="deadline">Deadline (optional)</label>
+          <input id="deadline" name="deadline" type="date" />
+          <span class="hint">Camp will show as expired after this date</span>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Add Camp</button>
+        <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Cancel</button></a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

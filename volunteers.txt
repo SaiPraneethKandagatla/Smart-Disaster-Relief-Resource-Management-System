@@ -1,0 +1,12 @@
+=== Volunteer Registry ===
+
+Volunteer ID: VOL1122
+Name: Kumar
+Assigned Camp: 1142
+Task: Food Distibution
+----------------------------------------
+Volunteer ID: VOL1123
+Name: Abhi
+Assigned Camp: 1142
+Task: Medical Distibution
+----------------------------------------

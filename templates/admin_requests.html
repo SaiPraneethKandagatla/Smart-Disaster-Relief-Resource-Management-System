@@ -1,0 +1,169 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Requests Inbox{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Requests Inbox</h2>
+    <div class="hint">Dashboard actions are queued here. Approve to apply changes to JSON data.</div>
+  </section>
+
+  <section class="panel">
+    <h2>Pending Requests</h2>
+    {% if pending %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Requested At</th>
+            <th>Type</th>
+            <th>Payload</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in pending %}
+            <tr>
+              <td>{{ r.requested_at }}</td>
+              <td><span class="pill">{{ r.kind }}</span></td>
+              <td>
+                <details>
+                  <summary>View Details</summary>
+                  <div style="margin:8px 0 0;font-size:13px;line-height:1.6;">
+                    {% if r.kind == 'help_request' %}
+                      <div><strong>Caller:</strong> {{ r.payload.caller or '-' }}</div>
+                      <div><strong>Team Needed:</strong> {{ r.payload.team or '-' }}</div>
+                      <div><strong>Message:</strong> {{ r.payload.message or '-' }}</div>
+                    {% elif r.kind == 'disaster_report' %}
+                      <div><strong>Disaster Type:</strong> {{ r.payload.disaster_type|replace('_', ' ')|title or '-' }}</div>
+                      <div><strong>Specific Disaster:</strong> {{ r.payload.disaster_subtype|replace('_', ' ')|title or '-' }}</div>
+                      <div><strong>Location:</strong> {{ r.payload.location or '-' }}</div>
+                      <div style="margin-top:8px;">
+                        <strong>Proof Photo:</strong>
+                        {% if r.payload.proof_image %}
+                          <div style="margin-top:6px;">
+                            <a href="{{ url_for('static', filename=r.payload.proof_image) }}" target="_blank" rel="noopener">Open full image</a>
+                          </div>
+                          <img
+                            src="{{ url_for('static', filename=r.payload.proof_image) }}"
+                            alt="Disaster proof photo"
+                            style="margin-top:6px;max-width:280px;max-height:180px;border-radius:8px;border:1px solid #e5e7eb;object-fit:cover;"
+                          />
+                        {% else %}
+                          <span> No photo uploaded</span>
+                        {% endif %}
+                      </div>
+                    {% elif r.kind == 'add_camp' %}
+                      <div><strong>Camp ID:</strong> {{ r.payload.camp_id or '-' }}</div>
+                      <div><strong>Location:</strong> {{ r.payload.location or '-' }}</div>
+                      <div><strong>Capacity:</strong> {{ r.payload.max_capacity or '-' }}</div>
+                      <div><strong>Food Packets:</strong> {{ r.payload.available_food_packets or 0 }}</div>
+                      <div><strong>Medical Kits:</strong> {{ r.payload.available_medical_kits or 0 }}</div>
+                    {% elif r.kind == 'register_victim' %}
+                      <div><strong>Victim ID:</strong> {{ r.payload.victim_id or '-' }}</div>
+                      <div><strong>Name:</strong> {{ r.payload.name or '-' }}</div>
+                      <div><strong>Age:</strong> {{ r.payload.age or '-' }}</div>
+                      <div><strong>Camp ID:</strong> {{ r.payload.camp_id or '-' }}</div>
+                      <div><strong>Is Critical:</strong> {{ 'Yes' if r.payload.is_critical else 'No' }}</div>
+                    {% elif r.kind == 'update_resources' %}
+                      <div><strong>Camp ID:</strong> {{ r.payload.camp_id or '-' }}</div>
+                      <div><strong>Add Food:</strong> {{ r.payload.add_food or 0 }}</div>
+                      <div><strong>Add Medical:</strong> {{ r.payload.add_medical or 0 }}</div>
+                    {% else %}
+                      {% for key, val in r.payload.items() %}
+                        <div><strong>{{ key|replace('_', ' ')|title }}:</strong> {{ val }}</div>
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                  {% if r.error %}
+                    <div class="hint" style="margin-top:8px;color:#b91c1c;">Last error: {{ r.error }}</div>
+                  {% endif %}
+                </details>
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('request_approve', request_id=r.id) }}" style="margin-bottom:8px;">
+                  {% if r.kind == 'disaster_report' %}
+                    <div style="margin-bottom:10px;">
+                      <strong>Select Teams to Dispatch:</strong>
+                      <div style="margin-top:6px;max-height:200px;overflow-y:auto;">
+                        {% for role, members in responders_by_role.items() %}
+                          {% if members %}
+                            <div style="margin-bottom:6px;">
+                              <strong style="font-size:12px;text-transform:uppercase;color:#666;">{{ role|replace('_', ' ') }}</strong>
+                              {% for m in members %}
+                                <label style="display:block;margin:3px 0;font-size:13px;">
+                                  <input type="checkbox" name="responders" value="{{ m.id }}" {% if m.status != 'free' %}disabled{% endif %} />
+                                  {{ m.name }}
+                                  {% if m.status == 'free' %}
+                                    <span style="color:#16a34a;">(Free)</span>
+                                  {% else %}
+                                    <span style="color:#b91c1c;">({{ m.status }})</span>
+                                  {% endif %}
+                                </label>
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endif %}
+                  <input name="note" placeholder="Approval note (optional)" />
+                  <div class="actions" style="margin-top:6px;">
+                    <button type="submit">Approve</button>
+                  </div>
+                </form>
+                <form method="post" action="{{ url_for('request_reject', request_id=r.id) }}">
+                  <input name="note" placeholder="Rejection note (optional)" />
+                  <div class="actions" style="margin-top:6px;">
+                    <button class="secondary" type="submit">Reject</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No pending requests.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Recent Decisions</h2>
+    {% if decided %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Requested</th>
+            <th>Decided</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in decided %}
+            <tr>
+              <td>{{ r.requested_at }}</td>
+              <td>{{ r.decided_at or '-' }}</td>
+              <td>
+                {% if r.status == 'approved' %}
+                  <span class="pill">approved</span>
+                {% else %}
+                  <span class="pill critical">rejected</span>
+                {% endif %}
+              </td>
+              <td>{{ r.kind }}</td>
+              <td>{{ r.decision_note or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No decisions yet.</div>
+    {% endif %}
+  </section>
+{% endblock %}

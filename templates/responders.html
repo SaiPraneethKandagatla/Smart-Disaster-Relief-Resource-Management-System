@@ -1,0 +1,127 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Responders{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Responder Status (Real-world)</h2>
+    <div class="hint">Track how many responders are free, busy, or in operation. Update status manually as events change on the ground.</div>
+
+    {% if activated_roles %}
+      <div class="hint" style="margin-top:8px;"><strong>Teams to dispatch (based on setup):</strong> {{ activated_roles|join(', ') }}</div>
+    {% endif %}
+
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('busy_responders_page') }}" style="text-decoration:none;"><button type="button"><i class="fas fa-clock"></i> Task Tracker</button></a>
+      <a href="{{ url_for('responders_page') }}" style="text-decoration:none;"><button class="secondary" type="button">All</button></a>
+      <a href="{{ url_for('responders_page', role='doctor') }}" style="text-decoration:none;"><button class="secondary" type="button">Doctors</button></a>
+      <a href="{{ url_for('responders_page', role='fire_force') }}" style="text-decoration:none;"><button class="secondary" type="button">Fire Force</button></a>
+      <a href="{{ url_for('responders_page', role='police') }}" style="text-decoration:none;"><button class="secondary" type="button">Police</button></a>
+      <a href="{{ url_for('responders_page', role='diver') }}" style="text-decoration:none;"><button class="secondary" type="button">Divers</button></a>
+      <a href="{{ url_for('responders_page', role='ambulance') }}" style="text-decoration:none;"><button class="secondary" type="button">Ambulance</button></a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Status Summary</h2>
+    <div class="actions">
+      <span class="pill">Doctors — Free {{ counts_all.doctor.free }}, Busy {{ counts_all.doctor.busy }}, In operation {{ counts_all.doctor.in_operation }}</span>
+      <span class="pill">Fire Force — Free {{ counts_all.fire_force.free }}, Busy {{ counts_all.fire_force.busy }}, In operation {{ counts_all.fire_force.in_operation }}</span>
+      <span class="pill">Police — Free {{ counts_all.police.free }}, Busy {{ counts_all.police.busy }}, In operation {{ counts_all.police.in_operation }}</span>
+      <span class="pill">Divers — Free {{ counts_all.diver.free }}, Busy {{ counts_all.diver.busy }}, In operation {{ counts_all.diver.in_operation }}</span>
+      <span class="pill">Ambulance — Free {{ counts_all.ambulance.free }}, Busy {{ counts_all.ambulance.busy }}, In operation {{ counts_all.ambulance.in_operation }}</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Responders{% if role %} ({{ role }}){% endif %}</h2>
+
+    {% if responders %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Specialty</th>
+            <th>Status</th>
+            <th>Current Task</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in responders %}
+            <tr>
+              <td>{{ r.responder_id }}</td>
+              <td>{{ r.name }}</td>
+              <td><span class="pill">{{ r.role }}</span></td>
+              <td>{{ r.specialty or '-' }}</td>
+              <td>
+                {% if r.status == 'in_operation' %}
+                  <span class="pill critical">in operation</span>
+                {% elif r.status == 'busy' %}
+                  <span class="pill" style="background:#dbeafe;color:#1e40af;">busy</span>
+                {% else %}
+                  <span class="pill" style="background:#d1fae5;color:#065f46;">free</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.status != 'free' and (r.task_description or r.assigned_note or r.assigned_to_id) %}
+                  <details>
+                    <summary style="cursor:pointer;color:#0ea5e9;">View Task</summary>
+                    <div style="margin-top:8px;padding:8px;background:#f8fafc;border-radius:6px;font-size:13px;">
+                      {% if r.assigned_to_type and r.assigned_to_id %}
+                        <div><strong>Target:</strong> {{ r.assigned_to_type | title }} - {{ r.assigned_to_id }}</div>
+                      {% endif %}
+                      {% if r.task_description %}
+                        <div><strong>Task:</strong> {{ r.task_description }}</div>
+                      {% elif r.assigned_note %}
+                        <div><strong>Note:</strong> {{ r.assigned_note }}</div>
+                      {% endif %}
+                      {% if r.estimated_duration_minutes %}
+                        <div><strong>Est. Duration:</strong> {{ r.estimated_duration_minutes }} min</div>
+                      {% endif %}
+                    </div>
+                  </details>
+                {% else %}
+                  <span class="hint">-</span>
+                {% endif %}
+              </td>
+              <td>
+                {% set can_edit = role_permissions.get(r.role, True) %}
+                {% if can_edit %}
+                  {% if r.status != 'free' %}
+                    <form method="post" action="{{ url_for('complete_responder_task', responder_id=r.responder_id) }}" style="display:inline;">
+                      <button type="submit" style="padding:5px 10px;font-size:12px;background:#10b981;border-color:#10b981;">
+                        <i class="fas fa-check"></i> Complete
+                      </button>
+                    </form>
+                  {% endif %}
+                  <details style="margin-top:6px;">
+                    <summary style="cursor:pointer;font-size:12px;color:#64748b;">Change Status</summary>
+                    <form method="post" action="{{ url_for('responders_update_status') }}" style="margin-top:6px;">
+                      <input type="hidden" name="responder_id" value="{{ r.responder_id }}" />
+                      <input type="hidden" name="role" value="{{ role or '' }}" />
+                      <select name="status" required style="padding:4px;font-size:12px;">
+                        <option value="free" {% if r.status == 'free' %}selected{% endif %}>free</option>
+                        <option value="busy" {% if r.status == 'busy' %}selected{% endif %}>busy</option>
+                        <option value="in_operation" {% if r.status == 'in_operation' %}selected{% endif %}>in operation</option>
+                      </select>
+                      <button type="submit" style="padding:4px 8px;font-size:12px;">Save</button>
+                    </form>
+                  </details>
+                {% else %}
+                  <div class="hint">Permission denied (Admin Portal).</div>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No responders found.</div>
+    {% endif %}
+  </section>
+{% endblock %}

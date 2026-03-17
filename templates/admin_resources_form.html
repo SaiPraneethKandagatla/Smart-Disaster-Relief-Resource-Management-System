@@ -1,0 +1,68 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Update Resources{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Update Camp Resources</h2>
+    <div class="hint">Add food packets or medical kits to an existing camp.</div>
+
+    <form method="post" action="{{ url_for('update_resources_submit') }}" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="camp_id">Select Camp</label>
+          <select id="camp_id" name="camp_id" required>
+            <option value="">Select a camp…</option>
+            {% for c in camps %}
+              <option value="{{ c.camp_id }}">{{ c.camp_id }} — {{ c.location }} (Food: {{ c.available_food_packets }}, Medical: {{ c.available_medical_kits }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="food_add">Food Packets to Add</label>
+          <input id="food_add" name="food_add" type="number" min="0" value="0" />
+        </div>
+        <div>
+          <label for="medical_add">Medical Kits to Add</label>
+          <input id="medical_add" name="medical_add" type="number" min="0" value="0" />
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Update Resources</button>
+        <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Cancel</button></a>
+      </div>
+    </form>
+  </section>
+
+  {% if camps %}
+  <section class="panel">
+    <h2>Current Camp Resources</h2>
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Camp ID</th>
+          <th>Location</th>
+          <th>Food Packets</th>
+          <th>Medical Kits</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in camps %}
+          <tr>
+            <td>{{ c.camp_id }}</td>
+            <td>{{ c.location }}</td>
+            <td>{{ c.available_food_packets }}</td>
+            <td>{{ c.available_medical_kits }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Volunteer Management{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-hands-helping"></i> Volunteer Management</h2>
+    <div class="hint">Manage volunteers and assign them to relief camps.</div>
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('add_volunteer_page') }}" style="text-decoration:none;"><button type="button"><i class="fas fa-plus"></i> Add Volunteer</button></a>
+      <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-arrow-left"></i> Back to Admin</button></a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Volunteers List</h2>
+    {% if volunteers %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Volunteer ID</th>
+            <th>Name</th>
+            <th>Assigned Camp</th>
+            <th>Task</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in volunteers %}
+            <tr>
+              <td>{{ v.volunteer_id }}</td>
+              <td>{{ v.name }}</td>
+              <td>{{ v.assigned_camp or 'Unassigned' }}</td>
+              <td>{{ v.task or 'No task' }}</td>
+              <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                <details class="assign-details">
+                  <summary style="cursor:pointer; padding:5px 10px; font-size:0.85rem; background:#0ea5e9; color:#fff; border-radius:6px; display:inline-block;"><i class="fas fa-link"></i> Assign</summary>
+                  <form method="post" action="{{ url_for('assign_volunteer', volunteer_id=v.volunteer_id) }}" style="margin-top:8px; padding:10px; background:#f0f9ff; border-radius:8px;">
+                    <div style="margin-bottom:8px;">
+                      <label style="font-size:0.85rem; font-weight:500;">Camp:</label>
+                      <select name="camp_id" required style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                        <option value="">Select Camp</option>
+                        {% for c in camps %}
+                          <option value="{{ c.camp_id }}" {% if c.camp_id == v.assigned_camp %}selected{% endif %}>{{ c.camp_id }} ({{ c.location }})</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                      <label style="font-size:0.85rem; font-weight:500;">Task:</label>
+                      <input type="text" name="task" value="{{ v.task or '' }}" placeholder="e.g., Food distribution" style="width:100%; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                    </div>
+                    <button type="submit" style="padding:6px 12px; font-size:0.85rem;"><i class="fas fa-check"></i> Save</button>
+                  </form>
+                </details>
+                <form method="post" action="{{ url_for('delete_volunteer', volunteer_id=v.volunteer_id) }}" style="display:inline;" onsubmit="return confirm('Delete volunteer {{ v.name }}?');">
+                  <button type="submit" class="danger" style="padding:5px 10px; font-size:0.85rem; background:#b91c1c; border-color:#b91c1c;">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No volunteers registered yet. Add your first volunteer above.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Volunteers by Camp</h2>
+    {% if camps %}
+      <div style="display:grid; gap:12px;">
+        {% for c in camps %}
+          <div style="padding:12px 16px; background:#f8fafc; border-radius:10px; border-left:4px solid #0ea5e9;">
+            <strong>{{ c.camp_id }}</strong> <span class="pill">{{ c.location }}</span>
+            {% set camp_volunteers = volunteers | selectattr('assigned_camp', 'equalto', c.camp_id) | list %}
+            {% if camp_volunteers %}
+              <div style="margin-top:8px; color:#555;">
+                <i class="fas fa-users"></i> {{ camp_volunteers | length }} volunteer(s):
+                {% for v in camp_volunteers %}
+                  <span class="pill" style="margin-left:4px;">{{ v.name }}{% if v.task %} ({{ v.task }}){% endif %}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="hint" style="margin-top:8px;">No volunteers assigned to this camp.</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="hint">No camps available.</div>
+    {% endif %}
+  </section>
+{% endblock %}

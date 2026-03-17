@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Report Missing Person{% endblock %}
+{% block content %}
+<div class="panel">
+  <h2><i class="fas fa-person-circle-question"></i> Report a Missing Person</h2>
+  <p class="hint">
+    Fill in the details below. Our team will cross-reference this report with arrived victims
+    at relief camps and notify you via the contact number provided.
+  </p>
+
+  <form method="post" action="{{ url_for('missing_report_submit') }}">
+    <div class="row">
+      <div>
+        <label for="name"><i class="fas fa-user"></i> Full Name of Missing Person *</label>
+        <input id="name" name="name" type="text" required placeholder="e.g. Ravi Kumar" />
+      </div>
+      <div>
+        <label for="age"><i class="fas fa-hashtag"></i> Age (approximate)</label>
+        <input id="age" name="age" type="number" min="0" max="120" placeholder="e.g. 42" />
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <label for="description"><i class="fas fa-id-card"></i> Physical Description</label>
+      <textarea id="description" name="description" rows="3" placeholder="Height, build, notable features, clothing last seen wearing, etc."></textarea>
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <div>
+        <label for="last_seen"><i class="fas fa-map-marker-alt"></i> Last Known Location</label>
+        <input id="last_seen" name="last_seen" type="text" placeholder="e.g. Near flood-hit bridge, Railway Colony" />
+      </div>
+      <div>
+        <label for="contact"><i class="fas fa-phone"></i> Your Contact Number *</label>
+        <input id="contact" name="contact" type="tel" required placeholder="e.g. 9876543210" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit"><i class="fas fa-paper-plane"></i> Submit Report</button>
+      <a href="{{ url_for('dashboard') }}" style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:#fff;border:2px solid #e5e7eb;color:#1a1a2e;border-radius:12px;text-decoration:none;font-weight:700;">
+        <i class="fas fa-arrow-left"></i> Back to HelpDesk
+      </a>
+    </div>
+  </form>
+</div>
+
+<div class="panel">
+  <h2><i class="fas fa-magnifying-glass"></i> Already Reported? Search Here</h2>
+  <p class="hint">Search for a missing person to check if they have been found or admitted to a relief camp.</p>
+  <form method="get" action="{{ url_for('missing_search_page') }}">
+    <div style="display:flex;gap:12px;">
+      <input name="q" type="text" placeholder="Enter name to search..." style="flex:1;" />
+      <button type="submit"><i class="fas fa-search"></i> Search</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

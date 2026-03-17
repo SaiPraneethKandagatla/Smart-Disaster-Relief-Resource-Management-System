@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}HelpDesk{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Relief HelpDesk</h2>
+    <div class="hint">Find help, locate relief camps, and request emergency assistance.</div>
+  </section>
+
+  <section class="panel" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b;">
+    <h2 style="color: #92400e;"><i class="fas fa-search"></i> Find Your Family / Friends</h2>
+    <div class="hint" style="color: #78350f;">Search for registered victims to check if they are safe and where they are located.</div>
+    <div class="actions" style="margin-top:12px;">
+      <a href="{{ url_for('victim_search_page') }}" style="text-decoration:none;">
+        <button type="button" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-search"></i> Search Victims</button>
+      </a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Report Disaster</h2>
+    <div class="hint">Report a disaster in your area. Admin will verify and dispatch emergency teams.</div>
+
+    <form method="post" action="{{ url_for('setup_save') }}" enctype="multipart/form-data" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="disaster_type">Disaster Type</label>
+          <select id="disaster_type" name="disaster_type" required>
+            <option value="">Select…</option>
+            <option value="natural">Natural Disaster</option>
+            <option value="man_made">Man-made Disaster</option>
+          </select>
+        </div>
+        <div>
+          <label for="disaster_subtype">Specific Disaster</label>
+          <select id="disaster_subtype" name="disaster_subtype" required>
+            <option value="">Select…</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:2;">
+          <label for="location">Location / Area</label>
+          <input type="text" id="location" name="location" placeholder="e.g., Main Street, Downtown" required />
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:2;">
+          <label for="proof_image">Proof Photo (required)</label>
+          <input
+            type="file"
+            id="proof_image"
+            name="proof_image"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            required
+          />
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px;">
+        <strong>Natural:</strong> Earthquake, Flood, Cyclone, Tsunami, Landslide, Wildfire, Drought<br>
+        <strong>Man-made:</strong> Building Fire, Road Accident, Train Derailment, Industrial Accident, Chemical Spill, Gas Leak, Explosion
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Submit Disaster Report</button>
+      </div>
+    </form>
+
+    {% if report.disaster_type %}
+      <div class="hint" style="margin-top:10px;">
+        <strong>Current:</strong> {{ report.disaster_type }} 
+        {% if report.disaster_subtype_label %} → {{ report.disaster_subtype_label }}{% endif %}
+      </div>
+    {% endif %}
+    {% if activated_roles %}
+      <div class="hint"><strong>Teams to dispatch:</strong> {{ activated_roles|join(', ') }}</div>
+    {% endif %}
+  </section>
+
+  <script>
+    const manMade = [
+      {code: 'building_fire', label: 'Building / Urban Fire'},
+      {code: 'road_accident', label: 'Road Traffic Accident'},
+      {code: 'train_derailment', label: 'Train Derailment'},
+      {code: 'industrial_accident', label: 'Industrial Accident'},
+      {code: 'chemical_spill', label: 'Industrial Chemical Spill'},
+      {code: 'gas_leak', label: 'Gas Leak'},
+      {code: 'oil_spill', label: 'Oil Spill'},
+      {code: 'explosion', label: 'Explosion'},
+      {code: 'nuclear_radiological', label: 'Nuclear / Radiological Incident'},
+      {code: 'stampede', label: 'Crowd Stampede'}
+    ];
+    const natural = [
+      {code: 'earthquake', label: 'Earthquake'},
+      {code: 'flood', label: 'Flood'},
+      {code: 'cyclone', label: 'Cyclone / Hurricane'},
+      {code: 'tsunami', label: 'Tsunami'},
+      {code: 'landslide', label: 'Landslide'},
+      {code: 'wildfire', label: 'Wildfire'},
+      {code: 'drought', label: 'Drought / Heatwave'}
+    ];
+    const currentSubtype = {{ (report.disaster_subtype or '')|tojson }};
+
+    const typeEl = document.getElementById('disaster_type');
+    const subtypeEl = document.getElementById('disaster_subtype');
+
+    function setSubtypeOptions() {
+      const dtype = (typeEl.value || '').toLowerCase();
+      const list = dtype === 'man_made' ? manMade : (dtype === 'natural' ? natural : []);
+
+      subtypeEl.innerHTML = '<option value="">Select…</option>';
+      for (const item of list) {
+        const opt = document.createElement('option');
+        opt.value = item.code;
+        opt.textContent = item.label;
+        if (item.code === currentSubtype) opt.selected = true;
+        subtypeEl.appendChild(opt);
+      }
+    }
+
+    typeEl.addEventListener('change', setSubtypeOptions);
+    setSubtypeOptions();
+  </script>
+
+  <section class="panel">
+    <h2>Emergency Contacts</h2>
+    <div class="hint">Use these numbers for immediate help. For non-urgent coordination, you can submit a Help Request (Admin will review).</div>
+
+    <div class="actions" style="margin-top:8px;">
+      <span class="pill">Toll-free: {{ emergency_contacts.toll_free or '-' }}</span>
+      <span class="pill">Ambulance: {{ emergency_contacts.ambulance or '-' }}</span>
+      <span class="pill">Police: {{ emergency_contacts.police or '-' }}</span>
+      <span class="pill">Fire: {{ emergency_contacts.fire_force or '-' }}</span>
+      <span class="pill">Doctors: {{ emergency_contacts.doctor or '-' }}</span>
+    </div>
+
+    <form method="post" action="/help/request" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="team">Need help from</label>
+          <select id="team" name="team" required>
+            <option value="">Select…</option>
+            <option value="ambulance">ambulance</option>
+            <option value="doctor">doctor</option>
+            <option value="police">police</option>
+            <option value="fire_force">fire_force</option>
+            <option value="diver">diver</option>
+          </select>
+        </div>
+        <div>
+          <label for="caller">Your phone number</label>
+          <input id="caller" name="caller" placeholder="Example: +91 98xxxxxx" required />
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" placeholder="Describe the situation and location" required></textarea>
+      </div>
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Send Help Request</button>
+        <span class="hint">This stores a ticket (not a real phone call).</span>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Find Nearest Relief Camp</h2>
+    <div class="hint">If you need shelter, food, or medical help, go to the nearest relief camp listed below. If camps are too far, call the toll-free number for assistance.</div>
+
+    {% if camps %}
+      <div style="margin-top:10px;">
+        <strong>Available Relief Camps:</strong>
+      </div>
+      <table style="margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Camp</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Space Available</th>
+            <th>Has Food</th>
+            <th>Has Medical</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in camps %}
+            {% set remaining = c.max_capacity - c.current_occupancy %}
+            <tr>
+              <td>{{ c.camp_id }}</td>
+              <td><strong>{{ c.location }}</strong></td>
+              <td>
+                {% if c.status == 'closed' %}
+                  <span class="pill critical">CLOSED</span>
+                {% elif c.is_expired() %}
+                  <span class="pill critical">EXPIRED</span>
+                {% else %}
+                  <span class="pill">Open</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.status == 'closed' or c.is_expired() %}
+                  <span class="pill critical">-</span>
+                {% elif remaining > 0 %}
+                  <span class="pill">{{ remaining }} spots</span>
+                {% else %}
+                  <span class="pill critical">Full</span>
+                {% endif %}
+              </td>
+              <td>{{ 'Yes' if c.available_food_packets > 0 and c.status != 'closed' else 'No' }}</td>
+              <td>{{ 'Yes' if c.available_medical_kits > 0 and c.status != 'closed' else 'No' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="hint" style="margin-top:10px;">
+        <strong>Can't reach a camp?</strong> Call the toll-free number: <strong>{{ emergency_contacts.toll_free or 'Not available' }}</strong>
+      </div>
+    {% else %}
+      <div class="hint" style="margin-top:10px;">
+        No relief camps are set up yet. Please call the toll-free number for help: <strong>{{ emergency_contacts.toll_free or 'Not available' }}</strong>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

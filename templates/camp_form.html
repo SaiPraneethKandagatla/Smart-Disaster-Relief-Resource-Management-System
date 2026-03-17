@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Add Camp{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Add Relief Camp</h2>
+    <form method="post" action="/camps/add">
+      <div class="row">
+        <div>
+          <label>Camp ID</label>
+          <input name="camp_id" placeholder="C001" required />
+        </div>
+        <div>
+          <label>Location</label>
+          <input name="location" placeholder="City / Area" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Max Capacity</label>
+          <input type="number" name="max_capacity" min="1" value="50" required />
+        </div>
+        <div>
+          <label>Volunteers (comma-separated)</label>
+          <input name="volunteers" placeholder="Asha, Ravi, John" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Available Food Packets</label>
+          <input type="number" name="available_food_packets" min="0" value="0" required />
+        </div>
+        <div>
+          <label>Available Medical Kits</label>
+          <input type="number" name="available_medical_kits" min="0" value="0" required />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Add Camp</button>
+        <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+
+      <div class="hint">Camp occupancy updates automatically when victims are assigned.</div>
+    </form>
+  </section>
+{% endblock %}

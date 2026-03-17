@@ -1,0 +1,163 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Allocation{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Admin Portal — Allocation</h2>
+    <div class="hint">Allocate responders (doctors, police, fire force, divers, ambulance) to a victim or a camp. This is stored in the backend (`responders.json`).</div>
+
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Permissions</button></a>
+      <a href="{{ url_for('responders_page') }}" style="text-decoration:none;"><button class="secondary" type="button">View Responders</button></a>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Allocate / Unallocate</h2>
+
+    <form method="post" action="{{ url_for('admin_allocate_save') }}">
+      <div class="row">
+        <div>
+          <label for="responder_id">Responder</label>
+          <select id="responder_id" name="responder_id" required>
+            <option value="">Select…</option>
+            {% for r in responders %}
+              <option value="{{ r.responder_id }}">
+                {{ r.responder_id }} — {{ r.name }} ({{ r.role }}) [{{ r.status }}]
+              </option>
+            {% endfor %}
+          </select>
+          <div class="hint">If a role is disabled in Permissions, allocation will be denied.</div>
+        </div>
+
+        <div>
+          <label for="action">Action</label>
+          <select id="action" name="action" required>
+            <option value="allocate" selected>allocate</option>
+            <option value="unallocate">unallocate (set free)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="target_type">Assign to</label>
+          <select id="target_type" name="target_type">
+            <option value="victim" selected>victim</option>
+            <option value="camp">camp</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="target_id">Target ID</label>
+          <select id="target_id" name="target_id">
+            <option value="">Select…</option>
+            {% for v in victims %}
+              <option data-ttype="victim" value="{{ v.victim_id }}">Victim {{ v.victim_id }} — {{ v.name }} ({{ v.health_condition }})</option>
+            {% endfor %}
+            {% for c in camps %}
+              <option data-ttype="camp" value="{{ c.camp_id }}">Camp {{ c.camp_id }} — {{ c.location }}</option>
+            {% endfor %}
+          </select>
+          <div class="hint">Switch “Assign to” to Camp to pick a camp id.</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="status">Set status</label>
+          <select id="status" name="status">
+            <option value="busy" selected>busy</option>
+            <option value="in_operation">in operation</option>
+          </select>
+          <div class="hint">Use “in operation” mostly for doctors during surgery.</div>
+        </div>
+
+        <div>
+          <label for="note">Note (optional)</label>
+          <input id="note" name="note" placeholder="Example: rescue + transport to camp A" />
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Save Allocation</button>
+        <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+    </form>
+
+    <script>
+      // Filter options depending on target_type (victim/camp), without serializing Python objects.
+      const targetTypeEl = document.getElementById('target_type');
+      const targetIdEl = document.getElementById('target_id');
+
+      function filterTargetOptions() {
+        const t = (targetTypeEl.value || '').toLowerCase();
+        const options = targetIdEl.querySelectorAll('option[data-ttype]');
+        let keptCurrent = false;
+
+        for (const opt of options) {
+          const ok = (opt.getAttribute('data-ttype') === t);
+          opt.hidden = !ok;
+          opt.disabled = !ok;
+          if (ok && opt.value === targetIdEl.value) {
+            keptCurrent = true;
+          }
+        }
+
+        if (!keptCurrent) {
+          targetIdEl.value = '';
+        }
+      }
+
+      targetTypeEl.addEventListener('change', filterTargetOptions);
+      filterTargetOptions();
+    </script>
+  </section>
+
+  <section class="panel">
+    <h2>Current Assignments</h2>
+    {% if responders %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in responders %}
+            <tr>
+              <td>{{ r.responder_id }}</td>
+              <td>{{ r.name }}</td>
+              <td><span class="pill">{{ r.role }}</span></td>
+              <td>
+                {% if r.status == 'in_operation' %}
+                  <span class="pill critical">in operation</span>
+                {% elif r.status == 'busy' %}
+                  <span class="pill">busy</span>
+                {% else %}
+                  <span class="pill">free</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.assigned_to_type and r.assigned_to_id %}
+                  {{ r.assigned_to_type }}: {{ r.assigned_to_id }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ r.assigned_note or '-' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

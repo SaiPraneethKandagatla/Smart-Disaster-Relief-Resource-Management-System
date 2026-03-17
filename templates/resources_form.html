@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Update Resources{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Update Camp Resources</h2>
+    <form method="post" action="/resources/update">
+      <div class="row">
+        <div>
+          <label>Camp ID</label>
+          <input name="camp_id" placeholder="C001" required />
+        </div>
+        <div>
+          <label>Add Food Packets</label>
+          <input type="number" name="food_add" min="0" value="0" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Add Medical Kits</label>
+          <input type="number" name="medical_add" min="0" value="0" required />
+        </div>
+        <div></div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Update Resources</button>
+        <a href="{{ url_for('dashboard') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

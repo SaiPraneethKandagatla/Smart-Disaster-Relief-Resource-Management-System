@@ -1,0 +1,63 @@
+{% extends "admin_base.html" %}
+{% block title %}Missing Persons{% endblock %}
+{% block content %}
+<div class="panel">
+  <h2><i class="fas fa-person-circle-question"></i> Missing Persons Registry</h2>
+  <p class="hint">Reports submitted by the public from the HelpDesk. Mark persons as found once located.</p>
+
+  {% if missing_persons %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Age</th>
+        <th>Description</th>
+        <th>Last Seen</th>
+        <th>Reported By</th>
+        <th>Reported At</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in missing_persons %}
+      <tr style="{% if p.status == 'found' %}opacity:0.55;{% endif %}">
+        <td>{{ loop.index }}</td>
+        <td><strong>{{ p.name }}</strong></td>
+        <td>{{ p.age or '—' }}</td>
+        <td style="max-width:200px;">{{ p.description or '—' }}</td>
+        <td>{{ p.last_seen or '—' }}</td>
+        <td>{{ p.reported_by or '—' }}</td>
+        <td style="font-size:12px;color:#6b7280;">{{ p.reported_at[:19].replace('T',' ') if p.reported_at else '—' }}</td>
+        <td>
+          {% if p.status == 'found' %}
+          <span class="pill approved"><i class="fas fa-check"></i> Found</span>
+          {% else %}
+          <span class="pill pending"><i class="fas fa-search"></i> Missing</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if p.status != 'found' %}
+          <form method="post" action="/missing-persons/{{ p.id }}/found" style="display:inline;">
+            <input type="hidden" name="note" value="">
+            <button type="submit" style="padding:6px 14px;font-size:12px;"><i class="fas fa-check"></i> Mark Found</button>
+          </form>
+          {% endif %}
+          <form method="post" action="/missing-persons/{{ p.id }}/delete" style="display:inline;" onsubmit="return confirm('Delete this record?');">
+            <button type="submit" class="danger" style="padding:6px 14px;font-size:12px;"><i class="fas fa-trash"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="text-align:center;padding:48px 0;color:#6b7280;">
+    <i class="fas fa-person-circle-check" style="font-size:48px;margin-bottom:16px;display:block;opacity:0.4;"></i>
+    <p>No missing person reports submitted yet.</p>
+    <p style="font-size:13px;">Reports will appear here after the public submits them from the HelpDesk.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

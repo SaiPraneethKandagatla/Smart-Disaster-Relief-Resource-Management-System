@@ -1,0 +1,307 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Busy Responders{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-clock"></i> Busy Responders - Task Tracker</h2>
+    <div class="hint">Monitor all responders currently working on tasks. Complete tasks to free responders automatically.</div>
+    <div class="actions" style="margin-top:10px;">
+      <form method="post" action="{{ url_for('auto_complete_tasks') }}" style="display:inline;">
+        <button type="submit"><i class="fas fa-magic"></i> Auto-Complete Overdue Tasks</button>
+      </form>
+      <a href="{{ url_for('responders_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-users"></i> All Responders</button></a>
+      <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-arrow-left"></i> Back to Admin</button></a>
+    </div>
+  </section>
+
+  {% if busy_responders %}
+    <section class="panel">
+      <h2><i class="fas fa-tasks"></i> Active Tasks ({{ busy_responders | length }})</h2>
+      <div class="task-grid">
+        {% for r in busy_responders %}
+          <div class="task-card {% if r.is_overdue %}task-overdue{% elif r.status == 'in_operation' %}task-operation{% endif %}">
+            <div class="task-header">
+              <div class="task-role">
+                {% if r.role == 'doctor' %}
+                  <i class="fas fa-user-md"></i>
+                {% elif r.role == 'ambulance' %}
+                  <i class="fas fa-ambulance"></i>
+                {% elif r.role == 'fire_force' %}
+                  <i class="fas fa-fire-extinguisher"></i>
+                {% elif r.role == 'police' %}
+                  <i class="fas fa-shield-alt"></i>
+                {% elif r.role == 'diver' %}
+                  <i class="fas fa-swimmer"></i>
+                {% else %}
+                  <i class="fas fa-user"></i>
+                {% endif %}
+                <span class="role-name">{{ r.role | replace('_', ' ') | title }}</span>
+              </div>
+              <span class="status-badge {% if r.status == 'in_operation' %}status-operation{% else %}status-busy{% endif %}">
+                {{ r.status | replace('_', ' ') | title }}
+              </span>
+            </div>
+            
+            <div class="task-body">
+              <h3>{{ r.name }}</h3>
+              {% if r.specialty %}
+                <span class="specialty-badge">{{ r.specialty }}</span>
+              {% endif %}
+              
+              <div class="task-details">
+                <div class="detail-row">
+                  <i class="fas fa-crosshairs"></i>
+                  <span>{{ r.assigned_to_type | title }}: <strong>{{ r.assigned_to_id }}</strong></span>
+                </div>
+                {% if r.task_description %}
+                  <div class="detail-row">
+                    <i class="fas fa-clipboard"></i>
+                    <span>{{ r.task_description }}</span>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <div class="time-tracker">
+                {% if r.elapsed_minutes is not none %}
+                  <div class="time-item">
+                    <span class="time-label">Elapsed:</span>
+                    <span class="time-value">{{ r.elapsed_minutes }} min</span>
+                  </div>
+                {% endif %}
+                {% if r.estimated_duration_minutes %}
+                  <div class="time-item">
+                    <span class="time-label">Estimated:</span>
+                    <span class="time-value">{{ r.estimated_duration_minutes }} min</span>
+                  </div>
+                {% endif %}
+                {% if r.time_remaining is not none %}
+                  <div class="time-item {% if r.is_overdue %}time-overdue{% endif %}">
+                    <span class="time-label">{% if r.is_overdue %}Overdue by:{% else %}Remaining:{% endif %}</span>
+                    <span class="time-value">{% if r.is_overdue %}{{ (r.time_remaining * -1) }}{% else %}{{ r.time_remaining }}{% endif %} min</span>
+                  </div>
+                {% endif %}
+              </div>
+              
+              {% if r.is_overdue %}
+                <div class="overdue-alert">
+                  <i class="fas fa-exclamation-triangle"></i> Task is overdue! Consider completing it.
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="task-footer">
+              <form method="post" action="{{ url_for('complete_responder_task', responder_id=r.responder_id) }}" style="flex:1;">
+                <button type="submit" class="complete-btn"><i class="fas fa-check-circle"></i> Complete Task</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <section class="panel">
+      <div class="empty-state">
+        <i class="fas fa-check-double"></i>
+        <h3>All Responders Free</h3>
+        <p>No responders are currently working on tasks.</p>
+      </div>
+    </section>
+  {% endif %}
+
+  <style>
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .task-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border-left: 4px solid #0ea5e9;
+    }
+    
+    .task-operation {
+      border-left-color: #f59e0b;
+    }
+    
+    .task-overdue {
+      border-left-color: #ef4444;
+      animation: pulse-red 2s infinite;
+    }
+    
+    @keyframes pulse-red {
+      0%, 100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2); }
+      50% { box-shadow: 0 2px 16px rgba(239, 68, 68, 0.4); }
+    }
+    
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .task-role {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .task-role i {
+      font-size: 20px;
+      color: #0ea5e9;
+    }
+    
+    .role-name {
+      font-weight: 600;
+      color: #475569;
+    }
+    
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .status-busy {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .status-operation {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .task-body {
+      padding: 16px;
+    }
+    
+    .task-body h3 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+      color: #1e293b;
+    }
+    
+    .specialty-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    
+    .task-details {
+      margin: 12px 0;
+    }
+    
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    
+    .detail-row i {
+      width: 16px;
+      color: #94a3b8;
+    }
+    
+    .time-tracker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    
+    .time-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .time-label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+    
+    .time-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #334155;
+    }
+    
+    .time-overdue .time-value {
+      color: #dc2626;
+    }
+    
+    .overdue-alert {
+      margin-top: 12px;
+      padding: 10px;
+      background: #fef2f2;
+      color: #991b1b;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .task-footer {
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .complete-btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .complete-btn:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-1px);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      color: #10b981;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+      margin: 0 0 8px 0;
+      color: #334155;
+    }
+  </style>
+{% endblock %}

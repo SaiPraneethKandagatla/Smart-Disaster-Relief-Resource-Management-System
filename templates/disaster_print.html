@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Incident Report — {{ disaster.disaster_subtype | title }} @ {{ disaster.location }}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      color: #1a1a2e;
+      background: #fff;
+      padding: 30px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .cover {
+      text-align: center;
+      border-bottom: 3px solid #1e3a5f;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+    }
+    .cover h1 {
+      font-size: 26px;
+      font-weight: 900;
+      color: #1e3a5f;
+      margin-bottom: 4px;
+    }
+    .cover .sub {
+      font-size: 13px;
+      color: #555;
+      margin-top: 6px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .badge.active { background: #fef2f2; color: #dc2626; border: 1.5px solid #dc2626; }
+    .badge.resolved { background: #f0fdf4; color: #059669; border: 1.5px solid #059669; }
+    .badge.monitoring { background: #fffbf0; color: #d97706; border: 1.5px solid #d97706; }
+    section {
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+    }
+    h2 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #1e3a5f;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+    }
+    .field .lbl {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .field .val {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-box {
+      text-align: center;
+      padding: 12px;
+      background: #f0f9ff;
+      border-radius: 8px;
+      border: 1px solid #bae6fd;
+    }
+    .stat-box .num {
+      font-size: 24px;
+      font-weight: 900;
+      color: #0369a1;
+    }
+    .stat-box .lbl {
+      font-size: 10px;
+      color: #6b7280;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #0ea5e9;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .timeline-text {
+      font-size: 13px;
+      color: #1a1a2e;
+    }
+    .timeline-time {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    .resource-needs-table td:last-child {
+      color: #059669;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: 32px;
+      border-top: 2px solid #e5e7eb;
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .print-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #1e3a5f;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      z-index: 9999;
+    }
+    @media print {
+      .print-btn { display: none; }
+      body { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="print-btn" onclick="window.print()"><i class="fas fa-print"></i> Print / Save PDF</button>
+
+  <div class="cover">
+    <h1>🚨 Incident Report</h1>
+    <div style="font-size:22px;font-weight:800;margin:8px 0;">{{ disaster.disaster_subtype | title }}</div>
+    <div style="font-size:14px;color:#555;">{{ disaster.location }}</div>
+    <div class="badge {{ disaster.status or 'active' }}">{{ (disaster.status or 'active') | upper }}</div>
+    <div class="sub">Printed: {{ print_time }} &nbsp;|&nbsp; Report ID: {{ disaster.disaster_id }}</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <section>
+    <h2><i class="fas fa-chart-bar"></i> Summary</h2>
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="num">{{ disaster.assigned_responders | length }}</div>
+        <div class="lbl">Teams Deployed</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">{{ disaster.assigned_camps | length }}</div>
+        <div class="lbl">Relief Camps</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">{{ disaster.estimated_victims or 0 }}</div>
+        <div class="lbl">Affected Persons</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">{{ (disaster.resource_needs or []) | length }}</div>
+        <div class="lbl">Resource Needs</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <div class="lbl">Disaster Type</div>
+        <div class="val">{{ disaster.disaster_type | title }} — {{ disaster.disaster_subtype | title }}</div>
+      </div>
+      <div class="field">
+        <div class="lbl">Severity</div>
+        <div class="val">{{ (disaster.severity or 'N/A') | title }}</div>
+      </div>
+      <div class="field">
+        <div class="lbl">Location</div>
+        <div class="val">{{ disaster.location }}</div>
+      </div>
+      <div class="field">
+        <div class="lbl">Reported At</div>
+        <div class="val">{{ disaster.reported_at[:19].replace('T',' ') if disaster.reported_at else 'N/A' }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  {% if disaster.updates %}
+  <section style="page-break-before:auto;">
+    <h2><i class="fas fa-timeline"></i> Disaster Timeline</h2>
+    {% for upd in disaster.updates %}
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:{% if loop.first %}#ef4444{% else %}#0ea5e9{% endif %};"></div>
+      <div>
+        <div class="timeline-text">{{ upd.message }}</div>
+        <div class="timeline-time">{{ upd.timestamp[:19].replace('T',' ') if upd.timestamp else '' }} — {{ upd.updated_by or 'System' }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <!-- Assigned Responders -->
+  {% if disaster.assigned_responders %}
+  <section>
+    <h2><i class="fas fa-hard-hat"></i> Deployed Response Teams</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Responder ID</th>
+          <th>Task</th>
+          <th>Assigned At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in disaster.assigned_responders %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.responder_id }}</td>
+          <td>{{ r.task or '—' }}</td>
+          <td>{{ r.assigned_at[:16].replace('T',' ') if r.assigned_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <!-- Relief Camps -->
+  {% if disaster.assigned_camps %}
+  <section>
+    <h2><i class="fas fa-campground"></i> Assigned Relief Camps</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Camp ID</th><th>Assigned At</th></tr>
+      </thead>
+      <tbody>
+        {% for c in disaster.assigned_camps %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ c.camp_id if c is mapping else c }}</td>
+          <td>{{ c.assigned_at[:16].replace('T',' ') if c is mapping and c.assigned_at else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <!-- Resource Needs -->
+  {% if disaster.resource_needs %}
+  <section>
+    <h2><i class="fas fa-boxes-stacked"></i> Resource Needs Tracker</h2>
+    <table class="resource-needs-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Item</th>
+          <th>Quantity</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for need in disaster.resource_needs %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ need.item }}</td>
+          <td>{{ need.quantity }}</td>
+          <td>{{ need.priority | title }}</td>
+          <td>{{ need.status | title }}</td>
+          <td>{{ need.note or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <div class="footer">
+    <span>Smart Disaster Relief Resource Management System</span>
+    <span>Generated: {{ print_time }}</span>
+  </div>
+
+</body>
+</html>

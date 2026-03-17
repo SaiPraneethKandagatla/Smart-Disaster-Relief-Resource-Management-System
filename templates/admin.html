@@ -1,0 +1,291 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Admin Portal{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2><i class="fas fa-chart-bar"></i> Overview Statistics</h2>
+    <div class="cards">
+      <div class="card"><div class="k">Total Camps</div><div class="v">{{ report.total_camps }}</div></div>
+      <div class="card"><div class="k">Total Victims</div><div class="v">{{ report.total_victims }}</div></div>
+      <div class="card emergency-card"><div class="k">Critical Victims</div><div class="v">{{ report.critical_victims }}</div></div>
+      <div class="card"><div class="k">Food Distributed</div><div class="v">{{ report.food_distributed }}</div></div>
+      <div class="card"><div class="k">Medical Distributed</div><div class="v">{{ report.medical_distributed }}</div></div>
+      <div class="card">
+        <div class="k">Highest Occupancy</div>
+        <div class="v">
+          {% if report.highest_camp_id %}
+            {{ report.highest_camp_id }}
+            <span class="pill">{{ report.highest_occupancy }}/{{ report.highest_capacity }}</span>
+          {% else %}
+            N/A
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% if low_resource_alerts %}
+  <section class="panel" style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #ef4444;">
+    <h2 style="color: #991b1b;"><i class="fas fa-exclamation-triangle"></i> Low Resource Alerts</h2>
+    <div class="hint" style="color: #7f1d1d;">The following camps are running low on resources. Please restock immediately!</div>
+    <div style="margin-top:12px; display:grid; gap:8px;">
+      {% for alert in low_resource_alerts %}
+        <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:#fff; border-radius:10px; border-left:4px solid {% if alert.type == 'food' %}#f59e0b{% else %}#ef4444{% endif %};">
+          <i class="fas {% if alert.type == 'food' %}fa-utensils{% else %}fa-first-aid{% endif %}" style="font-size:20px; color:{% if alert.type == 'food' %}#f59e0b{% else %}#ef4444{% endif %};"></i>
+          <div style="flex:1;">
+            <strong>{{ alert.camp_id }}</strong> <span class="pill">{{ alert.location }}</span>
+            <div class="hint" style="margin-top:4px;">
+              {% if alert.type == 'food' %}
+                Food packets: <strong style="color:#dc2626;">{{ alert.current }}</strong> (threshold: {{ alert.threshold }})
+              {% else %}
+                Medical kits: <strong style="color:#dc2626;">{{ alert.current }}</strong> (threshold: {{ alert.threshold }})
+              {% endif %}
+            </div>
+          </div>
+          <a href="{{ url_for('update_resources_page') }}" style="text-decoration:none;">
+            <button type="button" style="padding:8px 14px; font-size:12px;"><i class="fas fa-plus"></i> Restock</button>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <h2><i class="fas fa-shield-alt"></i> Admin Portal</h2>
+    <div class="hint">This admin portal is a separate app from the dashboard. Manage camps, victims, and approve incoming requests.</div>
+
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('requests_inbox') }}" style="text-decoration:none;"><button type="button"><i class="fas fa-inbox"></i> Requests Inbox</button></a>
+      <a href="{{ url_for('disasters_page') }}" style="text-decoration:none;"><button type="button" style="background:linear-gradient(135deg,#dc2626,#f97316);"><i class="fas fa-exclamation-triangle"></i> Disaster Tracker</button></a>
+      <a href="{{ url_for('contacts_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-address-book"></i> Emergency Contacts</button></a>
+      <a href="{{ url_for('responders_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-user-shield"></i> Responders</button></a>
+      <a href="{{ url_for('busy_responders_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-clock"></i> Task Tracker</button></a>
+      <a href="{{ url_for('admin_allocate_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-users-cog"></i> Allocation Portal</button></a>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">Availability (Doctors): Free {{ doctor_counts.free }}, Busy {{ doctor_counts.busy }}, In operation {{ doctor_counts.in_operation }}</div>
+    <div class="hint">Availability (Other teams): Ambulance free {{ responder_counts.ambulance.free }}, Fire free {{ responder_counts.fire_force.free }}, Police free {{ responder_counts.police.free }}, Divers free {{ responder_counts.diver.free }}</div>
+  </section>
+
+  <section class="panel">
+    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+    <div class="hint">Add camps/victims and distribute resources directly (no approval needed).</div>
+    <div class="actions" style="margin-top:10px;">
+      <a href="{{ url_for('add_camp_page') }}" style="text-decoration:none;"><button type="button">Add Camp</button></a>
+      <a href="{{ url_for('register_victim_page') }}" style="text-decoration:none;"><button type="button">Register Victim</button></a>
+      <a href="{{ url_for('volunteers_page') }}" style="text-decoration:none;"><button type="button"><i class="fas fa-hands-helping"></i> Volunteers</button></a>
+      <a href="{{ url_for('occupancy_page') }}" style="text-decoration:none;"><button class="secondary" type="button"><i class="fas fa-chart-pie"></i> Occupancy</button></a>
+      <a href="{{ url_for('update_resources_page') }}" style="text-decoration:none;"><button class="secondary" type="button">Update Resources</button></a>
+      <form method="post" action="{{ url_for('distribute_food') }}" style="display:inline;">
+        <button class="secondary" type="submit">Distribute Food</button>
+      </form>
+      <form method="post" action="{{ url_for('distribute_medical') }}" style="display:inline;">
+        <button class="secondary" type="submit">Distribute Medical</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Permissions</h2>
+    <div class="hint">Enable/disable which teams can be allocated/managed. When disabled, status updates are blocked and (for doctors) automatic allocation for critical victims is turned off.</div>
+
+    <form method="post" action="{{ url_for('admin_save') }}" style="margin-top:10px;">
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Team</th>
+            <th>Permission</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Doctors</td>
+            <td>
+              <label>
+                <input type="checkbox" name="perm_doctor" value="1" {% if role_permissions.doctor %}checked{% endif %} />
+                Allow allocation / status update
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>Ambulance</td>
+            <td>
+              <label>
+                <input type="checkbox" name="perm_ambulance" value="1" {% if role_permissions.ambulance %}checked{% endif %} />
+                Allow allocation / status update
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>Fire Force</td>
+            <td>
+              <label>
+                <input type="checkbox" name="perm_fire_force" value="1" {% if role_permissions.fire_force %}checked{% endif %} />
+                Allow allocation / status update
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>Police</td>
+            <td>
+              <label>
+                <input type="checkbox" name="perm_police" value="1" {% if role_permissions.police %}checked{% endif %} />
+                Allow allocation / status update
+              </label>
+            </td>
+          </tr>
+          <tr>
+            <td>Divers</td>
+            <td>
+              <label>
+                <input type="checkbox" name="perm_diver" value="1" {% if role_permissions.diver %}checked{% endif %} />
+                Allow allocation / status update
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Save Permissions</button>
+        <a href="{{ url_for('admin_portal') }}" style="text-decoration:none;"><button class="secondary" type="button">Back</button></a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Relief Camps</h2>
+    {% if camps %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Camp ID</th>
+            <th>Location</th>
+            <th>Occupancy</th>
+            <th>Food</th>
+            <th>Medical</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in camps %}
+            <tr>
+              <td>{{ c.camp_id }}</td>
+              <td>{{ c.location }}</td>
+              <td>{{ c.current_occupancy }}/{{ c.max_capacity }}</td>
+              <td>{{ c.available_food_packets }}</td>
+              <td>{{ c.available_medical_kits }}</td>
+              <td>{{ c.deadline or '-' }}</td>
+              <td>
+                {% if c.status == 'closed' %}
+                  <span class="pill">Closed</span>
+                {% elif c.is_expired() %}
+                  <span class="pill critical">Expired</span>
+                {% else %}
+                  <span class="pill">Active</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.status == 'active' and not c.is_expired() %}
+                  <form method="post" action="{{ url_for('close_camp', camp_id=c.camp_id) }}" style="display:inline;">
+                    <button type="submit" class="secondary" style="padding:4px 8px;font-size:12px;">Close</button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{{ url_for('reopen_camp', camp_id=c.camp_id) }}" style="display:inline;">
+                    <button type="submit" style="padding:4px 8px;font-size:12px;">Reopen</button>
+                  </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('delete_camp', camp_id=c.camp_id) }}" style="display:inline;" onsubmit="return confirm('Delete camp {{ c.camp_id }}? This cannot be undone.');">
+                  <button type="submit" class="secondary" style="padding:4px 8px;font-size:12px;background:#b91c1c;border-color:#b91c1c;">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No camps yet.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Victims</h2>
+    {% if victims %}
+      <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Victim ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Condition</th>
+            <th>Assigned Camp</th>
+            <th>Doctor</th>
+            <th>Food</th>
+            <th>Medical</th>
+            <th>Details</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in victims %}
+            <tr>
+              <td>{{ v.victim_id }}</td>
+              <td>{{ v.name }}</td>
+              <td>{{ v.age }}</td>
+              <td>
+                {% if v.health_condition == 'critical' %}
+                  <span class="pill critical">critical</span>
+                {% else %}
+                  <span class="pill">normal</span>
+                {% endif %}
+              </td>
+              <td>{{ v.assigned_camp or '-' }}</td>
+              <td>
+                {% if v.doctor_name %}
+                  {{ v.doctor_name }} <span class="pill">{{ v.doctor_specialty }}</span>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ 'Yes' if v.food_received else 'No' }}</td>
+              <td>{{ 'Yes' if v.medical_received else 'No' }}</td>
+              <td>
+                <details>
+                  <summary>View</summary>
+                  <div class="detailGrid">
+                    <div><span class="muted">Address:</span> {{ v.address or '-' }}</div>
+                    <div><span class="muted">Injury:</span> {{ v.injury or '-' }}</div>
+                  </div>
+                </details>
+              </td>
+              <td>
+                <a href="{{ url_for('update_victim_page', victim_id=v.victim_id) }}" style="text-decoration:none;">
+                  <button type="button" class="secondary" style="padding:5px 10px; font-size:0.85rem;"><i class="fas fa-edit"></i></button>
+                </a>
+                {% if v.health_condition == 'normal' %}
+                  <form action="{{ url_for('delete_victim', victim_id=v.victim_id) }}" method="post" style="display:inline;" onsubmit="return confirm('Delete recovered victim {{ v.name }}?');">
+                    <button type="submit" class="danger" style="padding:5px 10px; font-size:0.85rem;">Delete</button>
+                  </form>
+                {% else %}
+                  <span class="muted">Critical</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <div class="hint">No victims yet.</div>
+    {% endif %}
+  </section>
+{% endblock %}

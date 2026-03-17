@@ -1,0 +1,49 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Emergency Contacts{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h2>Emergency Contacts</h2>
+    <div class="hint">These numbers are shown on the dashboard. Configure them based on your region.</div>
+
+    <form method="post" action="{{ url_for('contacts_save') }}" style="margin-top:10px;">
+      <div class="row">
+        <div>
+          <label for="toll_free">Toll-free number</label>
+          <input id="toll_free" name="toll_free" value="{{ emergency_contacts.toll_free }}" placeholder="Example: 1800-XXX-XXXX" />
+        </div>
+        <div>
+          <label for="ambulance">Ambulance</label>
+          <input id="ambulance" name="ambulance" value="{{ emergency_contacts.ambulance }}" placeholder="Example: 108" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="police">Police</label>
+          <input id="police" name="police" value="{{ emergency_contacts.police }}" placeholder="Example: 100" />
+        </div>
+        <div>
+          <label for="fire_force">Fire</label>
+          <input id="fire_force" name="fire_force" value="{{ emergency_contacts.fire_force }}" placeholder="Example: 101" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label for="doctor">Doctors / Medical desk</label>
+          <input id="doctor" name="doctor" value="{{ emergency_contacts.doctor }}" placeholder="Example: +91 9xxxxxxx" />
+        </div>
+        <div>
+          <label for="diver">Diver / Rescue divers</label>
+          <input id="diver" name="diver" value="{{ emergency_contacts.diver }}" placeholder="Optional" />
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button type="submit">Save Contacts</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

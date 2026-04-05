@@ -1,0 +1,40 @@
+name: Python CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install flask werkzeug pymongo
+
+      - name: Compile Python files
+        run: python -m compileall -q .
+
+      - name: Smoke import core modules
+        run: |
+          python - <<'PY'
+          import admin_app  # noqa: F401
+          import web_app  # noqa: F401
+          import relief_system  # noqa: F401
+          import request_queue  # noqa: F401
+          import db  # noqa: F401
+          print('Core modules imported successfully')
+          PY

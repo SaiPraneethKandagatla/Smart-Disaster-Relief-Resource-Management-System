@@ -125,12 +125,14 @@
       naturalCampSection.style.display = dtype === 'natural' ? 'block' : 'none';
     }
 
-    typeEl.addEventListener('change', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+      typeEl.addEventListener('change', () => {
+        setSubtypeOptions();
+        toggleNaturalCampSection();
+      });
       setSubtypeOptions();
       toggleNaturalCampSection();
     });
-    setSubtypeOptions();
-    toggleNaturalCampSection();
   </script>
 
   <section class="panel">
@@ -174,7 +176,7 @@
     </form>
   </section>
 
-  <section class="panel" id="natural-camps-section" style="display:none;">
+  <section class="panel" id="natural-camps-section" style="display:{% if report.disaster_type == 'natural' %}block{% else %}none{% endif %};">
     <h2>Find Nearest Relief Camp</h2>
     <div class="hint">If you need shelter, food, or medical help, go to the nearest relief camp listed below. If camps are too far, call the toll-free number for assistance.</div>
 

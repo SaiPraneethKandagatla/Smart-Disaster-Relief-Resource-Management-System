@@ -118,8 +118,19 @@
       }
     }
 
-    typeEl.addEventListener('change', setSubtypeOptions);
+    function toggleNaturalCampSection() {
+      const dtype = (typeEl.value || '').toLowerCase();
+      const naturalCampSection = document.getElementById('natural-camps-section');
+      if (!naturalCampSection) return;
+      naturalCampSection.style.display = dtype === 'natural' ? 'block' : 'none';
+    }
+
+    typeEl.addEventListener('change', () => {
+      setSubtypeOptions();
+      toggleNaturalCampSection();
+    });
     setSubtypeOptions();
+    toggleNaturalCampSection();
   </script>
 
   <section class="panel">
@@ -163,7 +174,7 @@
     </form>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="natural-camps-section" style="display:none;">
     <h2>Find Nearest Relief Camp</h2>
     <div class="hint">If you need shelter, food, or medical help, go to the nearest relief camp listed below. If camps are too far, call the toll-free number for assistance.</div>
 

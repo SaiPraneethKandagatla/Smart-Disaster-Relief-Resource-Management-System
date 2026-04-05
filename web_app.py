@@ -32,7 +32,7 @@ from request_queue import create_request
 
 
 app = Flask(__name__)
-app.secret_key = "aiac-relief-system"  # simple secret for local demo
+app.secret_key = os.environ.get("WEB_APP_SECRET_KEY", "aiac-relief-system")
 
 ALLOWED_PROOF_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 PROOF_UPLOAD_FOLDER = os.path.join(app.static_folder or "static", "disaster_proofs")
@@ -428,7 +428,9 @@ def missing_search_page():
 
 
 def main() -> None:
-    app.run(debug=True)
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 from datetime import datetime
 from functools import wraps
 from flask import Flask, redirect, render_template, request, url_for, flash, session, Response
@@ -35,7 +36,7 @@ from request_queue import (
 
 
 app = Flask(__name__)
-app.secret_key = "aiac-relief-system-admin"  # simple secret for local demo
+app.secret_key = os.environ.get("ADMIN_APP_SECRET_KEY", "aiac-relief-system-admin")
 
 
 @app.template_filter('format_datetime')
@@ -58,8 +59,8 @@ def format_datetime_filter(value):
 
 
 # Default admin credentials (can be changed via settings)
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 
 def login_required(f):
@@ -1185,7 +1186,9 @@ def disaster_print_page(disaster_id):
 
 def main() -> None:
     # Running on a different port keeps admin UI separate from dashboard.
-    app.run(debug=True, port=5001)
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    port = int(os.environ.get("PORT", "5001"))
+    app.run(host="0.0.0.0", port=port, debug=debug)
 
 
 if __name__ == "__main__":

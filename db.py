@@ -3,12 +3,14 @@ MongoDB connection module for Disaster Relief System.
 Uses local MongoDB (localhost:27017) with database 'relief_system'.
 """
 
+import os
+
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
 # MongoDB connection settings
-MONGO_URI = "mongodb://localhost:27017/"
-DATABASE_NAME = "relief_system"
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+DATABASE_NAME = os.environ.get("MONGO_DB_NAME", "relief_system")
 
 _client = None
 _db = None
